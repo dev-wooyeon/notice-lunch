@@ -161,13 +161,12 @@ def send_slack_message(image_path):
             initial_comment="오늘의 점심 메뉴입니다."
         )
         print("슬랙 이미지 전송 성공")
-        # 공개 URL 생성
+        # Slack permalink (내부 링크)
         file_id = response['file']['id']
-        client.files_sharedPublicURL(file=file_id)
         public_response = client.files_info(file=file_id)
-        public_url = public_response['file']['permalink_public']
-        print(f"공개 이미지 URL: {public_url}")
-        return public_url
+        permalink = public_response['file']['permalink']
+        print(f"Slack 이미지 permalink: {permalink}")
+        return permalink
     except SlackApiError as e:
         print(f"슬랙 이미지 전송 실패: {e.response['error']}")
         if 'error' in e.response:
