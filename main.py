@@ -23,6 +23,9 @@ CHANNEL_ID = os.getenv('CHANNEL_ID')
 if not DRY_RUN and not CHANNEL_ID:
     raise ValueError("CHANNEL_ID 환경 변수가 설정되지 않았습니다.")
 
+# 구글 채팅 웹훅 URL
+GOOGLE_CHAT_WEBHOOK = os.getenv('GOOGLE_CHAT_WEBHOOK')
+
 def is_holiday():
     """오늘 날짜가 한국 공휴일인지 확인합니다."""
     today = datetime.now().date()
@@ -159,6 +162,21 @@ def send_slack_message(image_path):
         else:
             print(f"예외: {e}")
 
+def send_google_chat_message(image_url):
+    """구글 채팅으로 메시지를 전송합니다."""
+    if not GOOGLE_CHAT_WEBHOOK:
+        print("구글 채팅 웹훅이 설정되지 않아 생략")
+        return
+    message = {
+        "text": f"오늘의 점심 메뉴입니다.\n{image_url}"
+    }
+    try:
+        response = requests.post(GOOGLE_CHAT_WEBHOOK, json=message)
+        response.raise_for_status()
+        print("구글 채팅 메시지 전송 성공")
+    except requests.RequestException as e:
+        print(f"구글 채팅 메시지 전송 실패: {e}")
+
 def main():
     dry_run = os.getenv('DRY_RUN', 'False').lower() == 'true'
     test_image_url = os.getenv('TEST_IMAGE_URL')
@@ -191,9 +209,10 @@ def main():
     print("이미지가 menu_image.png로 저장되었습니다.")
 
     if dry_run:
-        print("테스트 모드: 슬랙 전송 생략")
+        print("테스트 모드: 메시지 전송 생략")
     else:
         send_slack_message(image_path)
+        send_google_chat_message(image_url)
     print("완료")
 
 if __name__ == "__main__":

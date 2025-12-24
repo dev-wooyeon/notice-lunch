@@ -26,9 +26,10 @@
 4. Install to Workspace: 앱을 워크스페이스에 설치 (워크스페이스 관리자 권한 필요, 설치 후 토큰 생성)
 5. Bot User OAuth Token 복사 (Verification Token 아님, Client Secret 아님)
 5. 채널 ID 확인 (메뉴를 전송할 채널): Slack 채널에서 채널 이름 클릭 > 채널 세부 정보 > 채널 ID 복사 (C로 시작)
-6. GitHub 리포지토리에 코드를 푸시합니다.
-7. GitHub 리포지토리 Settings > Secrets and variables > Actions에서 `SLACK_BOT_TOKEN`과 `CHANNEL_ID`를 설정합니다.
-8. 워크플로우가 자동으로 실행됩니다 (매일 8시 KST). 봇이 지정된 채널에 메뉴 이미지를 전송합니다. 채널 참여자 모두 볼 수 있음.
+6. Google Chat 웹훅 URL 확인 (선택사항): Google Chat 스페이스에서 웹훅 생성
+7. GitHub 리포지토리에 코드를 푸시합니다.
+8. GitHub 리포지토리 Settings > Secrets and variables > Actions에서 `SLACK_BOT_TOKEN`, `CHANNEL_ID`, `GOOGLE_CHAT_WEBHOOK`를 설정합니다.
+9. 워크플로우가 자동으로 실행됩니다 (매일 8시 KST). 봇이 Slack 채널과 Google Chat에 메뉴 이미지를 전송합니다.
 
 ## 로컬 테스트
 ```bash
@@ -37,6 +38,7 @@ pip install -r requirements.txt
 # 환경 변수 설정 (실제 토큰과 채널 ID 사용)
 export SLACK_BOT_TOKEN="your_bot_token"
 export CHANNEL_ID="C0A59M92L1K"
+export GOOGLE_CHAT_WEBHOOK="your_webhook_url"
 
 # 테스트 모드 (슬랙 전송 없이 콘솔 출력)
 TEST_IMAGE_URL="https://example.com/menu.png" DRY_RUN=True python main.py
