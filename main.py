@@ -161,12 +161,20 @@ def send_slack_message(image_path):
             initial_comment="오늘의 점심 메뉴입니다."
         )
         print("슬랙 이미지 전송 성공")
+        # 공개 URL 생성
+        file_id = response['file']['id']
+        client.files_sharedPublicURL(file=file_id)
+        public_response = client.files_info(file=file_id)
+        public_url = public_response['file']['permalink_public']
+        print(f"공개 이미지 URL: {public_url}")
+        return public_url
     except SlackApiError as e:
         print(f"슬랙 이미지 전송 실패: {e.response['error']}")
         if 'error' in e.response:
             print(f"에러 상세: {e.response}")
         else:
             print(f"예외: {e}")
+        return None
 
 def send_google_chat_message(image_url):
     """구글 채팅으로 메시지를 전송합니다."""
@@ -234,9 +242,12 @@ def main():
     if dry_run:
         print("테스트 모드: 메시지 전송 생략")
     else:
+        slack_public_url = None
         if SLACK_BOT_TOKEN:
-            send_slack_message(image_path)
-        send_google_chat_message(image_url)
+            slack_public_url = send_slack_message(image_path)
+        # Slack 공개 URL이 있으면 사용, 없으면 원본 URL
+        google_image_url = slack_public_url or image_url
+        send_google_chat_message(google_image_url)
     print("완료")
 
 if __name__ == "__main__":
