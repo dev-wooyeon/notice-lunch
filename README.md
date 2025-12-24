@@ -22,7 +22,7 @@
        }
    }
    ```
-3. OAuth & Permissions에서 Bot Token Scopes 추가: `chat:write`, `files:write`, `im:write`, `channels:join`
+3. OAuth & Permissions에서 Bot Token Scopes 추가: `chat:write`, `files:write`, `files:read`, `im:write`, `channels:join`
    User Token Scopes 추가: `files:write:user` (공개 공유용)
 4. Install to Workspace: 앱을 워크스페이스에 설치 (워크스페이스 관리자 권한 필요, 설치 후 토큰 생성)
 5. User OAuth Token 복사 (Verification Token 아님, Client Secret 아님, Bot Token 아님)
