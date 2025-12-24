@@ -15,8 +15,8 @@ DRY_RUN = os.getenv('DRY_RUN', 'False').lower() == 'true'
 if not DRY_RUN and not SLACK_BOT_TOKEN:
     raise ValueError("SLACK_BOT_TOKEN 환경 변수가 설정되지 않았습니다.")
 
-# 블로그 URL
-BLOG_URL = "https://blog.naver.com/yjm3038/222191646255"
+# 블로그 카테고리 URL (최신 메뉴 게시글 찾기)
+BLOG_CATEGORY_URL = "https://blog.naver.com/PostList.naver?blogId=yjm3038&categoryNo=13"
 
 # 슬랙 채널 ID
 CHANNEL_ID = os.getenv('CHANNEL_ID')
@@ -69,26 +69,27 @@ def check_robots_txt(url):
 
 def get_latest_menu_image_url():
     """블로그에서 최신 메뉴 이미지 URL을 가져옵니다."""
-    # 로컬 파일에서 HTML 읽기 (테스트용)
-    if os.path.exists('body.html'):
-        print("로컬 body.html 파일 사용")
-        with open('body.html', 'r', encoding='utf-8') as f:
-            html_content = f.read()
-    else:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        response = requests.get(BLOG_URL, headers=headers)
-        response.raise_for_status()
-        html_content = response.text
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    response = requests.get(BLOG_CATEGORY_URL, headers=headers)
+    response.raise_for_status()
+    html_content = response.text
 
     soup = BeautifulSoup(html_content, 'html.parser')
 
+    # 모든 이미지 출력 (디버깅용)
+    all_images = soup.find_all('img')
+    print(f"전체 이미지 개수: {len(all_images)}")
+    for i, img in enumerate(all_images[:10]):  # 처음 10개만
+        src = img.get('src', '')
+        print(f"이미지 {i}: {src}")
+
     # 게시글에서 메뉴 이미지 찾기 (postfiles.pstatic.net 도메인 사용)
     images = soup.find_all('img', src=lambda src: src and 'postfiles.pstatic.net' in src)
-    print(f"찾은 이미지 개수: {len(images)}")
+    print(f"postfiles 이미지 개수: {len(images)}")
     for i, img in enumerate(images):
-        print(f"이미지 {i}: {img['src']}")
+        print(f"메뉴 이미지 {i}: {img['src']}")
     if images:
         # 첫 번째 메뉴 이미지 URL 반환
         image_url = images[0]['src']
@@ -134,10 +135,8 @@ def main():
         print("오늘은 공휴일입니다. 메뉴 전송을 생략합니다.")
         return
 
-    # robots.txt 확인
-    if not check_robots_txt(BLOG_URL):
-        print("크롤링이 허용되지 않아 중단합니다.")
-        return
+    # robots.txt 확인 (경고만, 강제 중단하지 않음)
+    check_robots_txt(BLOG_CATEGORY_URL)
 
     if test_image_url:
         image_url = test_image_url
