@@ -139,8 +139,18 @@ def download_image(image_url):
     response.raise_for_status()
     image = Image.open(io.BytesIO(response.content))
     print(f"이미지 크기: {image.size}")  # (width, height)
-    image_path = 'menu_image.png'
-    image.save(image_path)
+
+    # 투명 배경 처리: JPEG로 변환하여 흰색 배경 적용
+    if image.mode in ('RGBA', 'LA', 'P'):
+        # 투명 배경을 흰색으로 채우기
+        background = Image.new('RGB', image.size, (255, 255, 255))
+        if image.mode == 'P':
+            image = image.convert('RGBA')
+        background.paste(image, mask=image.split()[-1])  # alpha 채널 사용
+        image = background
+
+    image_path = 'menu_image.jpg'  # JPEG로 변경
+    image.save(image_path, 'JPEG', quality=95)
     return image_path
 
 def send_slack_message(image_path):
@@ -206,7 +216,7 @@ def main():
 
     print(f"이미지 URL: {image_url}")
     image_path = download_image(image_url)
-    print("이미지가 menu_image.png로 저장되었습니다.")
+    print(f"이미지가 {image_path}로 저장되었습니다.")
 
     if dry_run:
         print("테스트 모드: 메시지 전송 생략")
