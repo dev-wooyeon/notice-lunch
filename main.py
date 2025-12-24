@@ -78,21 +78,55 @@ def get_latest_menu_image_url():
 
     soup = BeautifulSoup(html_content, 'html.parser')
 
-    # 모든 이미지 출력 (디버깅용)
-    all_images = soup.find_all('img')
-    print(f"전체 이미지 개수: {len(all_images)}")
-    for i, img in enumerate(all_images[:10]):  # 처음 10개만
-        src = img.get('src', '')
-        print(f"이미지 {i}: {src}")
+    # 메뉴 카테고리(13)의 최신 게시글 링크 찾기
+    post_links = soup.find_all('a', href=lambda href: href and 'PostView.naver' in href and 'categoryNo=13' in href)
+    if not post_links:
+        print("메뉴 카테고리의 게시글 링크를 찾을 수 없습니다.")
+        return None
+
+    latest_post_url = post_links[0]['href']
+    if not latest_post_url.startswith('http'):
+        latest_post_url = 'https://blog.naver.com' + latest_post_url
+    print(f"최신 메뉴 게시글 URL: {latest_post_url}")
+
+    # 게시글 페이지 크롤링
+    response = requests.get(latest_post_url, headers=headers)
+    response.raise_for_status()
+    post_html = response.text
+    post_soup = BeautifulSoup(post_html, 'html.parser')
 
     # 게시글에서 메뉴 이미지 찾기 (postfiles.pstatic.net 도메인 사용)
-    images = soup.find_all('img', src=lambda src: src and 'postfiles.pstatic.net' in src)
-    print(f"postfiles 이미지 개수: {len(images)}")
+    images = post_soup.find_all('img', src=lambda src: src and 'postfiles.pstatic.net' in src)
+    print(f"게시글 이미지 개수: {len(images)}")
     for i, img in enumerate(images):
-        print(f"메뉴 이미지 {i}: {img['src']}")
+        src = img.get('src', '')
+        data_src = img.get('data-src', '')
+        data_lazy_src = img.get('data-lazy-src', '')
+        print(f"이미지 {i}: src={src}, data-src={data_src}, data-lazy-src={data_lazy_src}")
+        # 큰 버전 URL 찾기
+        large_url = data_src or data_lazy_src or src
+        if 'type=w773' in large_url or 'type=w80_blur' not in large_url:
+            print(f"큰 이미지 후보: {large_url}")
     if images:
-        # 첫 번째 메뉴 이미지 URL 반환
-        image_url = images[0]['src']
+        # 큰 버전 우선 사용
+        image_url = None
+        for img in images:
+            data_src = img.get('data-src', '')
+            data_lazy_src = img.get('data-lazy-src', '')
+            src = img.get('src', '')
+            candidates = [data_src, data_lazy_src, src]
+            for candidate in candidates:
+                if candidate and ('type=w773' in candidate or '?' not in candidate):
+                    image_url = candidate
+                    break
+            if image_url:
+                break
+        if not image_url:
+            image_url = images[0]['src']
+        # 쿼리 파라미터 처리: w80_blur -> w773, 또는 제거
+        if 'type=w80_blur' in image_url:
+            image_url = image_url.replace('type=w80_blur', 'type=w773')
+        print(f"선택된 이미지 URL: {image_url}")
         return image_url
     return None
 
