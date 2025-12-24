@@ -26,4 +26,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run menu scraper
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: python main.py
