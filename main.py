@@ -12,16 +12,12 @@ from datetime import datetime
 # 환경 변수에서 슬랙 토큰 가져오기
 SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN')
 DRY_RUN = os.getenv('DRY_RUN', 'False').lower() == 'true'
-if not DRY_RUN and not SLACK_BOT_TOKEN:
-    raise ValueError("SLACK_BOT_TOKEN 환경 변수가 설정되지 않았습니다.")
 
 # 블로그 카테고리 URL (최신 메뉴 게시글 찾기)
 BLOG_CATEGORY_URL = "https://blog.naver.com/PostList.naver?blogId=yjm3038&categoryNo=13"
 
 # 슬랙 채널 ID
 CHANNEL_ID = os.getenv('CHANNEL_ID')
-if not DRY_RUN and not CHANNEL_ID:
-    raise ValueError("CHANNEL_ID 환경 변수가 설정되지 않았습니다.")
 
 # 구글 채팅 웹훅 URL
 GOOGLE_CHAT_WEBHOOK = os.getenv('GOOGLE_CHAT_WEBHOOK')
@@ -178,7 +174,24 @@ def send_google_chat_message(image_url):
         print("구글 채팅 웹훅이 설정되지 않아 생략")
         return
     message = {
-        "text": f"오늘의 점심 메뉴입니다.\n{image_url}"
+        "cards": [
+            {
+                "header": {
+                    "title": "오늘의 점심 메뉴"
+                },
+                "sections": [
+                    {
+                        "widgets": [
+                            {
+                                "image": {
+                                    "imageUrl": image_url
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     }
     try:
         response = requests.post(GOOGLE_CHAT_WEBHOOK, json=message)
@@ -221,7 +234,8 @@ def main():
     if dry_run:
         print("테스트 모드: 메시지 전송 생략")
     else:
-        send_slack_message(image_path)
+        if SLACK_BOT_TOKEN:
+            send_slack_message(image_path)
         send_google_chat_message(image_url)
     print("완료")
 
