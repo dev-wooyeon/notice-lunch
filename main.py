@@ -8,6 +8,8 @@ import io
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
 from datetime import datetime
+import pytz
+from workalendar.asia import SouthKorea
 
 # 환경 변수에서 슬랙 토큰 가져오기
 SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN')
@@ -24,28 +26,10 @@ GOOGLE_CHAT_WEBHOOK = os.getenv('GOOGLE_CHAT_WEBHOOK')
 
 def is_holiday():
     """오늘 날짜가 한국 공휴일인지 확인합니다."""
-    today = datetime.now().date()
-    month = today.month
-    day = today.day
-
-    # 주요 고정 공휴일
-    holidays = [
-        (1, 1),   # 신정
-        (3, 1),   # 삼일절
-        (5, 5),   # 어린이날
-        (6, 6),   # 현충일
-        (8, 15),  # 광복절
-        (10, 3),  # 개천절
-        (10, 9),  # 한글날
-        (12, 25), # 크리스마스
-    ]
-
-    if (month, day) in holidays:
-        return True
-
-    # 추가로 설날, 추석 등은 매년 다르니, 간단히 생략 또는 API 사용 (여기서는 생략)
-
-    return False
+    korea_tz = pytz.timezone('Asia/Seoul')
+    today = datetime.now(korea_tz).date()
+    cal = SouthKorea()
+    return cal.is_holiday(today)
 
 def check_robots_txt(url):
     """robots.txt를 확인하여 크롤링 허용 여부를 체크합니다."""

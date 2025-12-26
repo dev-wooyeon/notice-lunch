@@ -2,3 +2,5 @@ requests==2.31.0
 beautifulsoup4==4.12.2
 Pillow==10.0.1
 slack-sdk==3.25.0
+pytz==2023.3
+workalendar==17.0.0
