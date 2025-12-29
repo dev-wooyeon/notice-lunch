@@ -2,7 +2,7 @@ name: Daily Lunch Menu Notification
 
 on:
   schedule:
-    - cron: '0 23 * * 1-5'  # UTC 23:00 (KST 08:00), Monday to Friday
+    - cron: '0 23 * * *'  # UTC 23:00 (KST 08:00), daily
   workflow_dispatch:  # 수동 실행 가능
 
 jobs:

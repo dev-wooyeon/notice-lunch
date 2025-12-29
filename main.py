@@ -31,6 +31,13 @@ def is_holiday():
     cal = SouthKorea()
     return cal.is_holiday(today)
 
+def is_weekday():
+    """오늘 날짜가 평일(월-금)인지 확인합니다."""
+    korea_tz = pytz.timezone('Asia/Seoul')
+    today = datetime.now(korea_tz).date()
+    # weekday(): 0=월요일, 1=화요일, ..., 6=일요일
+    return today.weekday() < 5
+
 def check_robots_txt(url):
     """robots.txt를 확인하여 크롤링 허용 여부를 체크합니다."""
     parsed_url = urlparse(url)
@@ -196,9 +203,12 @@ def main():
     test_image_url = os.getenv('TEST_IMAGE_URL')
     print("점심 메뉴 조회 시작")
 
-    # 공휴일 체크
-    if is_holiday():
-        print("오늘은 공휴일입니다. 메뉴 전송을 생략합니다.")
+    # 평일 및 공휴일 체크
+    if not is_weekday() or is_holiday():
+        if not is_weekday():
+            print("오늘은 주말입니다. 메뉴 전송을 생략합니다.")
+        elif is_holiday():
+            print("오늘은 공휴일입니다. 메뉴 전송을 생략합니다.")
         return
 
     # robots.txt 확인 (경고만, 강제 중단하지 않음)
@@ -230,7 +240,7 @@ def main():
             slack_public_url = send_slack_message(image_path)
         # Slack 공개 URL이 있으면 사용, 없으면 원본 URL
         google_image_url = slack_public_url or image_url
-        send_google_chat_message(google_image_url)
+        # send_google_chat_message(google_image_url)  # 일단 제한
     print("완료")
 
 if __name__ == "__main__":
